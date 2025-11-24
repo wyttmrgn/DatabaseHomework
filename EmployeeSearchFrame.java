@@ -87,11 +87,17 @@ import javax.swing.JTextArea;
         btnDBFill.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 DatabaseQueries queries = new DatabaseQueries(conn);
+
+                // Clear existing items before adding new ones
+                department.clear();
+                project.clear();
+
                 String[] dept = queries.LoadDepartment();	
                 for(int i = 0; i < dept.length; i++) {
                     department.addElement(dept[i]);
                 }
-                String[] prj = {"ProdoctX", "ProductY", "ProductZ"};
+                
+                String[] prj = queries.LoadProject();
                 for(int j = 0; j < prj.length; j++) {
                     project.addElement(prj[j]);
                 }
