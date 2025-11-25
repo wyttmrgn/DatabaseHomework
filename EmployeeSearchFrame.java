@@ -19,10 +19,11 @@
  import javax.swing.JList;
  import javax.swing.JCheckBox;
  import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.awt.event.ActionEvent;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+ import java.sql.Connection;
+ import java.awt.event.ActionEvent;
+ import javax.swing.JScrollPane;
+ import javax.swing.JTextArea;
+ import javax.swing.JOptionPane;
  
  public class EmployeeSearchFrame extends JFrame {
  
@@ -48,6 +49,12 @@ import javax.swing.JTextArea;
                      frame.setVisible(true);
                      DatabaseConfig config = new DatabaseConfig();
                      conn = config.connectDatabase();
+
+                     //No Connection Pop-Up Error Message At Start Up
+                     if (conn == null)
+                        JOptionPane.showMessageDialog(frame, "Could not successfully connect to the database.\nPlease check your connection settings and try again.",
+                                                                "! Database Connection Error !", 
+                                                                JOptionPane.ERROR_MESSAGE);
                      
                  } catch (Exception e) {
                      e.printStackTrace();
@@ -86,6 +93,15 @@ import javax.swing.JTextArea;
          */
         btnDBFill.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                //No Connection Pop-Up Error Message When Fill Btn Is Pressed
+                if (conn == null) {
+                    JOptionPane.showMessageDialog(EmployeeSearchFrame.this,
+                        "No database connection established.\nPlease connect to the database before filling the list.",
+                        "! No Database Connection !", 
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+                }
+                
                 DatabaseQueries queries = new DatabaseQueries(conn);
 
                 // Clear existing items before adding new ones
@@ -151,7 +167,9 @@ import javax.swing.JTextArea;
         btnSearch.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (conn == null) {
-                    textAreaEmployee.setText("Error: No database connection. Please check your connection.");
+                    JOptionPane.showMessageDialog(EmployeeSearchFrame.this, "No database is connected.\nPlease connect to a database before searching.",
+                     "! No Database Connection !", 
+                    JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 
