@@ -8,6 +8,9 @@
 // checking github
  import java.awt.EventQueue;
 
+ //Checking SQL Database Name
+ import java.sql.SQLException;
+
  import javax.swing.JFrame;
  import javax.swing.JPanel;
  import javax.swing.border.EmptyBorder;
@@ -26,12 +29,13 @@
  import javax.swing.JOptionPane;
  
  public class EmployeeSearchFrame extends JFrame {
- 
-     private static final long serialVersionUID = 1L;
-     private JPanel contentPane;
-     private JTextField txtDatabase;
-     private JList<String> lstDepartment;
-     private DefaultListModel<String> department = new DefaultListModel<String>();
+  
+    private boolean listFilled = false;
+    private static final long serialVersionUID = 1L;
+    private JPanel contentPane;
+    private JTextField txtDatabase;
+    private JList<String> lstDepartment;
+    private DefaultListModel<String> department = new DefaultListModel<String>();
     private JList<String> lstProject;
     private DefaultListModel<String> project = new DefaultListModel<String>();
     private JTextArea textAreaEmployee;
@@ -64,6 +68,43 @@
      }
  
      /**
+     * The ensureDBValid makes sure the database entered is valid
+     * It also makes sure the database field is not empty
+     */
+     private boolean ensureDBValid() {
+        if (conn == null) {
+                JOptionPane.showMessageDialog(EmployeeSearchFrame.this,
+                    "No database connection established.\nPlease connect to the database before filling the list.",
+                    "! No Database Connection !", 
+                    JOptionPane.ERROR_MESSAGE);
+                return false;
+                }
+        
+        String enteredDBName = txtDatabase.getText().trim();
+
+        if (enteredDBName.isEmpty()) {
+            JOptionPane.showMessageDialog(EmployeeSearchFrame.this,
+            "Please Enter A Database Name Before Filling",
+            "! Missing Database Name !", JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+
+        try {
+            conn.setCatalog(enteredDBName);
+        }
+        catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(EmployeeSearchFrame.this,
+                                        "The Database \"" + enteredDBName + "\" is not a valid database or cannot be accessed.\nPlease enter a valid Database Name.",
+                                            "! Invalid Database Name !",
+                                        JOptionPane.ERROR_MESSAGE);
+        return false;
+        }
+
+        return true;
+     }
+     
+     /**
       * Create the frame.
       */
      public EmployeeSearchFrame() {
@@ -85,6 +126,7 @@
          txtDatabase.setBounds(90, 20, 193, 20);
          contentPane.add(txtDatabase);
          txtDatabase.setColumns(10);
+
          
         JButton btnDBFill = new JButton("Fill");
         /**
@@ -93,13 +135,12 @@
          */
         btnDBFill.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                //No Connection Pop-Up Error Message When Fill Btn Is Pressed
-                if (conn == null) {
-                    JOptionPane.showMessageDialog(EmployeeSearchFrame.this,
-                        "No database connection established.\nPlease connect to the database before filling the list.",
-                        "! No Database Connection !", 
-                        JOptionPane.ERROR_MESSAGE);
-                return;
+                //Error Message Pop-Up if Database Is Not Valid
+                if (!ensureDBValid()) {
+                    department.clear();
+                    project.clear();
+                    listFilled = false;
+                    return;
                 }
                 
                 DatabaseQueries queries = new DatabaseQueries(conn);
@@ -117,6 +158,8 @@
                 for(int j = 0; j < prj.length; j++) {
                     project.addElement(prj[j]);
                 }
+
+                listFilled = true;
             }
         });
          
@@ -166,10 +209,16 @@
         JButton btnSearch = new JButton("Search");
         btnSearch.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (conn == null) {
-                    JOptionPane.showMessageDialog(EmployeeSearchFrame.this, "No database is connected.\nPlease connect to a database before searching.",
-                     "! No Database Connection !", 
-                    JOptionPane.ERROR_MESSAGE);
+                //Error Message Pop-Up If Database Is Not Valid
+                if (!ensureDBValid()) {
+                    department.clear();
+                    project.clear();
+                    return;
+                }
+
+                if (!listFilled) {
+                    JOptionPane.showMessageDialog(EmployeeSearchFrame.this,"Please click the \"Fill\" button to load the Departments and Projects before searching for Employees\n",
+                    "! Lists Not Loaded !", JOptionPane.INFORMATION_MESSAGE);
                     return;
                 }
                 
